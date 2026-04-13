@@ -524,6 +524,7 @@
 
   <!-- Upload toast -->
   <div class="upload-toast" v-if="uploading">文件上传中...</div>
+  <div class="upload-toast" v-if="toast">{{ toast }}</div>
 
   <!-- Hidden file inputs -->
   <input type="file" ref="fileInput" accept="image/*" style="display:none" @change="onFileSelect">
@@ -815,8 +816,28 @@ createApp({
     }
 
     // ── Copy ──
+    const toast = ref('');
+    let toastTimer = null;
+
+    function showToast(msg) {
+      toast.value = msg;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toast.value = ''; }, 1500);
+    }
+
     function copyText(text) {
-      navigator.clipboard.writeText(text);
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => showToast('已复制'));
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;left:-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('已复制');
+      }
     }
 
     // ── Init ──
@@ -832,7 +853,7 @@ createApp({
 
     return {
       myId, nickname, color, messages, inputText, connected,
-      previewSrc, uploading, dragCounter, hasMore, loadingMore, newMsgCount,
+      previewSrc, uploading, dragCounter, hasMore, loadingMore, newMsgCount, toast,
       messagesEl, inputEl, fileInput, anyFileInput, containerEl, containerStyle,
       savePrefs, onScroll, formatDate, formatTime, showDateDivider,
       sendText, autoResize, scrollBottom, onFileSelect, onAnyFileSelect, onPaste, onDrop,
