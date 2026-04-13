@@ -1,0 +1,14 @@
+{
+  "name": "lan-chat",
+  "version": "1.0.0",
+  "description": "局域网信息发送工具",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "pg": "^8.13.0",
+    "ws": "^8.18.0",
+    "formidable": "^3.5.2"
+  }
+}
