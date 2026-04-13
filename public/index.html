@@ -841,14 +841,26 @@ createApp({
     }
 
     // ── Init ──
+    function focusInput() {
+      if (inputEl.value) inputEl.value.focus();
+    }
+
     onMounted(() => {
       loadHistory(true);
       connect();
+      focusInput();
+      setTimeout(focusInput, 300);
+      setTimeout(focusInput, 800);
+      window.addEventListener('focus', focusInput);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) focusInput();
+      });
     });
 
     onUnmounted(() => {
       clearTimeout(reconnectTimer);
       if (ws) ws.close();
+      window.removeEventListener('focus', focusInput);
     });
 
     return {
