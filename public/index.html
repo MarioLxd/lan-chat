@@ -192,6 +192,15 @@
   }
   .msg-bubble:hover .copy-btn { opacity: 1; }
   .copy-btn svg { width: 14px; height: 14px; stroke: #fff; fill: none; }
+  .msg-bubble a {
+    color: #93c5fd;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    word-break: break-all;
+  }
+  .msg-bubble a:hover { color: #bfdbfe; }
+  .msg.self .msg-bubble a { color: #e0d4ff; }
+  .msg.self .msg-bubble a:hover { color: #fff; }
   .msg.self .msg-bubble {
     background: var(--accent);
     color: #fff;
@@ -214,10 +223,17 @@
     cursor: pointer;
     display: block;
   }
-  .msg-img-wrap .dl-btn {
+  .img-actions {
     position: absolute;
     top: 6px;
     right: 6px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .msg-img-wrap:hover .img-actions { opacity: 1; }
+  .img-actions button {
     width: 28px; height: 28px;
     border-radius: 6px;
     background: rgba(0,0,0,0.55);
@@ -226,11 +242,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
-    transition: opacity 0.15s;
   }
-  .msg-img-wrap:hover .dl-btn { opacity: 1; }
-  .dl-btn svg { width: 16px; height: 16px; stroke: #fff; fill: none; }
+  .img-actions button:hover { background: rgba(0,0,0,0.75); }
+  .img-actions svg { width: 14px; height: 14px; stroke: #fff; fill: none; }
 
   /* File card */
   .file-card {
@@ -444,7 +458,7 @@
             <span class="msg-name" :style="{ color: msg.sender_color }">{{ msg.sender_name }}</span>
             <span class="msg-time">{{ formatTime(msg.created_at) }}</span>
           </div>
-          <div class="msg-bubble" v-if="msg.type === 'text'">{{ msg.content }}
+          <div class="msg-bubble" v-if="msg.type === 'text'"><span v-html="linkify(msg.content)"></span>
             <button class="copy-btn" @click.stop="copyText(msg.content)" title="复制">
               <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -454,13 +468,15 @@
           <div class="msg-bubble" v-else-if="msg.type === 'image'">
             <div class="msg-img-wrap">
               <img :src="msg.content" loading="lazy" @click="previewSrc = msg.content">
-              <button class="dl-btn" @click.stop="downloadImg(msg.content)" title="下载">
-                <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-              </button>
+              <div class="img-actions">
+                <button @click.stop="downloadImg(msg.content)" title="下载">
+                  <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
           <div class="msg-bubble" v-else-if="msg.type === 'file'">
@@ -797,6 +813,14 @@ createApp({
       catch { return { url: content, name: 'file', size: 0 }; }
     }
 
+    function linkify(text) {
+      const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return escaped.replace(
+        /(https?:\/\/[^\s<]+)/g,
+        '<a href="$1" target="_blank" rel="noopener" onclick="event.stopPropagation()">$1</a>'
+      );
+    }
+
     function formatSize(bytes) {
       if (!bytes) return '';
       if (bytes < 1024) return bytes + ' B';
@@ -869,7 +893,7 @@ createApp({
       messagesEl, inputEl, fileInput, anyFileInput, containerEl, containerStyle,
       savePrefs, onScroll, formatDate, formatTime, showDateDivider,
       sendText, autoResize, scrollBottom, onFileSelect, onAnyFileSelect, onPaste, onDrop,
-      downloadImg, copyText, startResize, parseFile, formatSize,
+      downloadImg, copyText, startResize, parseFile, formatSize, linkify,
     };
   }
 }).mount('#app');
